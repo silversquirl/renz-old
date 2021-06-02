@@ -1,0 +1,6 @@
+[submodule "deps/zglfw"]
+	path = deps/zglfw
+	url = https://github.com/Iridescence-Technologies/zglfw.git
+[submodule "deps/zgl"]
+	path = deps/zgl
+	url = https://github.com/vktec/zgl
