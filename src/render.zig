@@ -140,17 +140,6 @@ pub fn Renderer(comptime Context: type, comptime activate: fn (Context) void) ty
                     self.vao.enableVertexAttribute(m.loc);
                     self.vao.attribBinding(m.loc, accessor.buffer_view);
                     self.vao.attribFormat(m.loc, accessor.components, accessor.component_type, accessor.normalized, accessor.byte_offset);
-
-                    // const view = self.file.buffer_views[accessor.buffer_view];
-                    // self.buffers[view.buffer].bind(.array_buffer);
-                    // gl.vertexAttribPointer(
-                    //     m.loc,
-                    //     accessor.components,
-                    //     accessor.component_type,
-                    //     accessor.normalized,
-                    //     view.byte_stride,
-                    //     view.byte_offset + accessor.byte_offset,
-                    // );
                 }
             }
         }
