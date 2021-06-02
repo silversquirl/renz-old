@@ -3,6 +3,7 @@ const gl = @import("../deps/zgl/zgl.zig");
 
 const gltf = @import("gltf.zig");
 const util = @import("util.zig");
+const zm = @import("zm.zig");
 
 pub fn Renderer(comptime Context: type, comptime activate: fn (Context) void) type {
     return struct {
@@ -13,6 +14,11 @@ pub fn Renderer(comptime Context: type, comptime activate: fn (Context) void) ty
         prog: gl.Program,
         vao: gl.VertexArray,
         buffers: []gl.Buffer,
+
+        // Uniforms
+        u: struct {
+            transform: ?u32,
+        },
 
         const Self = @This();
 
@@ -56,6 +62,10 @@ pub fn Renderer(comptime Context: type, comptime activate: fn (Context) void) ty
                 );
             }
 
+            inline for (comptime std.meta.fieldNames(@TypeOf(self.u))) |name| {
+                @field(self.u, name) = self.prog.uniformLocation("u_" ++ name);
+            }
+
             return self;
         }
 
@@ -79,19 +89,23 @@ pub fn Renderer(comptime Context: type, comptime activate: fn (Context) void) ty
             defer gl.useProgram(.invalid);
 
             for (self.file.scene.?.nodes) |node| {
-                self.drawNode(node.*);
+                self.drawNode(node.*, zm.id(4));
             }
         }
 
-        fn drawNode(self: *Self, node: gltf.Node) void {
+        fn drawNode(self: *Self, node: gltf.Node, transform: zm.Mat(4, 4)) void {
+            const matrix = zm.mat(4, 4, node.matrix).mul(transform);
+
             if (node.mesh) |mesh| {
+                self.prog.uniformMatrix4(self.u.transform, true, &.{matrix.colMajor()});
+
                 for (mesh.primitives) |prim| {
                     self.drawPrimitive(prim);
                 }
             }
 
             for (node.children) |child| {
-                self.drawNode(child.*);
+                self.drawNode(child.*, matrix);
             }
         }
 

@@ -115,6 +115,7 @@ pub fn Mat(comptime cols_: comptime_int, comptime rows_: comptime_int) type {
                 }
                 break :blk mask;
             };
+            // Compiler bug means I can't pass Vector(0, f32){} as b
             return @shuffle(f32, self.m, self.m, mask);
         }
 
@@ -127,10 +128,11 @@ pub fn Mat(comptime cols_: comptime_int, comptime rows_: comptime_int) type {
                 }
                 break :blk mask;
             };
+            // Compiler bug means I can't pass Vector(0, f32){} as b
             return @shuffle(f32, self.m, self.m, mask);
         }
 
-        pub fn transpose(m: Self) Self {
+        pub fn transpose(self: Self) Self {
             const mask = comptime blk: {
                 var mask: Vector(rows * cols, i32) = undefined;
                 var x = 0;
@@ -144,14 +146,25 @@ pub fn Mat(comptime cols_: comptime_int, comptime rows_: comptime_int) type {
                 break :blk mask;
             };
             // Compiler bug means I can't pass Vector(0, f32){} as b
-            const res = @shuffle(f32, m.m, m.m, mask);
+            const res = @shuffle(f32, self.m, self.m, mask);
             return .{ .m = res };
         }
 
-        /// Convert to row-major array
-        /// To get a column-major array, cast the `m` field
-        pub fn toArray(m: Self) [rows * cols]f32 {
+        /// Convert to row-major flat array
+        /// To get a column-major flat array, cast the `m` field
+        pub fn toArray(m: Self) [cols * rows]f32 {
             return m.transpose().m;
+        }
+
+        /// Convert to column-major nested array
+        pub fn colMajor(m: Self) [cols][rows]f32 {
+            const a: [rows * cols]f32 = m.m;
+            return @bitCast([cols][rows]f32, a);
+        }
+
+        /// Convert to row-major nested array
+        pub fn rowMajor(m: Self) [rows][cols]f32 {
+            return m.transpose().colMajor();
         }
     };
 }
@@ -259,6 +272,18 @@ test "transpose mat44" {
     }), a.transpose());
 }
 
+/// Construct an identity matrix for the given size
+pub fn id(comptime n: comptime_int) Mat(n, n) {
+    comptime {
+        var m = std.mem.zeroes(Mat(n, n));
+        var i = 0;
+        while (i < n) : (i += 1) {
+            m.set(i, i, 1);
+        }
+        return m;
+    }
+}
+
 /// Construct a 4x4 matrix from a translation vector
 pub fn translate(v: [3]f32) Mat(4, 4) {
     return mat(4, 4, .{
@@ -271,16 +296,22 @@ pub fn translate(v: [3]f32) Mat(4, 4) {
 
 /// Construct a 4x4 matrix from a rotation quaternion
 pub fn rotate(q: [4]f32) Mat(4, 4) {
+    // Stored as xyzw since that's the order used by GLSL and glTF
+    const w = 3;
+    const x = 0;
+    const y = 1;
+    const z = 2;
+
     return mat(4, 4, .{
-        q[0],  q[3],  -q[2], q[1],
-        -q[3], q[0],  q[1],  q[2],
-        q[2],  -q[1], q[0],  q[3],
-        -q[1], -q[2], -q[3], q[0],
+        q[w],  q[z],  -q[y], q[x],
+        -q[z], q[w],  q[x],  q[y],
+        q[y],  -q[x], q[w],  q[z],
+        -q[x], -q[y], -q[z], q[w],
     }).mul(mat(4, 4, .{
-        q[0],  q[3],  -q[2], -q[1],
-        -q[3], q[0],  q[1],  -q[2],
-        q[2],  -q[1], q[0],  -q[3],
-        q[1],  q[2],  q[3],  q[0],
+        q[w],  q[z],  -q[y], -q[x],
+        -q[z], q[w],  q[x],  -q[y],
+        q[y],  -q[x], q[w],  -q[z],
+        q[x],  q[y],  q[z],  q[w],
     }));
 }
 
@@ -292,4 +323,13 @@ pub fn scale(v: [3]f32) Mat(4, 4) {
         0,    0,    v[2], 0,
         0,    0,    0,    1,
     });
+}
+
+test "id4" {
+    try std.testing.expectEqual(mat(4, 4, .{
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+    }), id(4));
 }
