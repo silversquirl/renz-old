@@ -303,15 +303,15 @@ pub fn rotate(q: [4]f32) Mat(4, 4) {
     const z = 2;
 
     return mat(4, 4, .{
-        q[w],  q[z],  -q[y], q[x],
-        -q[z], q[w],  q[x],  q[y],
-        q[y],  -q[x], q[w],  q[z],
-        -q[x], -q[y], -q[z], q[w],
-    }).mul(mat(4, 4, .{
-        q[w],  q[z],  -q[y], -q[x],
-        -q[z], q[w],  q[x],  -q[y],
-        q[y],  -q[x], q[w],  -q[z],
+        q[w],  -q[z], q[y],  -q[x],
+        q[z],  q[w],  -q[x], -q[y],
+        -q[y], q[x],  q[w],  -q[z],
         q[x],  q[y],  q[z],  q[w],
+    }).mul(mat(4, 4, .{
+        q[w],  -q[z], q[y],  q[x],
+        q[z],  q[w],  -q[x], q[y],
+        -q[y], q[x],  q[w],  q[z],
+        -q[x], -q[y], -q[z], q[w],
     }));
 }
 
