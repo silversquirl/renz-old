@@ -57,6 +57,7 @@ pub const Mesh = struct {
     pub const Attributes = struct {
         position: ?u32,
         normal: ?u32,
+        color_0: ?u32,
     };
 };
 
@@ -223,6 +224,7 @@ const MeshI = struct {
                 .attributes = .{
                     .position = p.attributes.POSITION,
                     .normal = p.attributes.NORMAL,
+                    .color_0 = p.attributes.COLOR_0,
                 },
                 .indices = p.indices,
                 .material = p.material,
@@ -237,6 +239,7 @@ const MeshI = struct {
         attributes: struct {
             POSITION: ?u32,
             NORMAL: ?u32,
+            COLOR_0: ?u32,
         },
         indices: ?u32 = null,
         material: ?u32 = null,

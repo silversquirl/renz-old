@@ -171,6 +171,7 @@ pub fn Renderer(comptime Context: type, comptime activate: fn (Context) void) ty
         }{
             .{ .name = "position", .loc = 0 },
             .{ .name = "normal", .loc = 1 },
+            .{ .name = "color_0", .loc = 2 },
         };
     };
 }
